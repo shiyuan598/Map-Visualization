@@ -37,9 +37,6 @@
       pitch: 60,
       antialias: true // create the gl context with MSAA antialiasing, so custom layers are antialiased
     });
-    map.on('load', function(){
-      map.addLayer('waterway-label');
-    });
 
     var modelOrigins = [];
     for (let index = 0; index < 100; index++) {
@@ -96,13 +93,14 @@
           context: gl,
           antialias: true
         });
-
+        console.info('123')
         this.renderer.autoClear = false;
       },
       render: function (gl, matrix) {
+        console.info(456)
         for (let index = 0; index < modelOrigins.length; index++) {
           modelOrigin = modelOrigins[index];
-          console.info(modelOrigin);
+          // console.info(modelOrigin);
           modelTransform = {
             translateX: mapboxgl.MercatorCoordinate.fromLngLat(modelOrigin, modelAltitude).x,
             translateY: mapboxgl.MercatorCoordinate.fromLngLat(modelOrigin, modelAltitude).y,
@@ -135,7 +133,11 @@
 
     map.on('style.load', function () {
       map.addLayer(customLayer);
+      map.on('click', '3d-model', function(e){
+      console.info('123');
+    })
     });
+    
   </script>
 
 </body>

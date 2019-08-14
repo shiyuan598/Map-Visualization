@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8' />
+    <title>Add custom icons with Markers</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src="style/MapStyle.js"></script>
+    <script src="style/dynamic-traffic-info.js"></script>
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.css' rel='stylesheet' />
+    <style>
+        body { margin:0; padding:0; }
+        #map { position:absolute; top:0; bottom:0; width:100%; }
+        *{
+            margin: 0;
+            padding: 0;
+        }
+        .marker {
+            /* background: url("./image/loc.png"); */
+            background-position: center center;
+            width:20px;
+            height:20px;
+            display: flex;
+            display: -webkit-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .marker p{
+            background-color: rgba(250, 0, 0, 0.2);
+            width: 10px;
+            height: 10px;
+            border-radius:50%;
+            animation: myfirst 1.5s infinite;
+            box-shadow: 0px 0px 2px #f00;
+        }
+        @keyframes myfirst{
+            10% {transform: scale(1.2);}
+            20% {transform: scale(2);}
+            40% {transform: scale(3);}
+            60% {transform: scale(4);}
+            80% {transform: scale(6);}
+            100% {transform: scale(8);}
+        }
+    </style>
+</head>
+<body>
+<div id='map'></div>
+<script>
+mapboxgl.accessToken = 'pk.eyJ1IjoidHV0dXRvdG8iLCJhIjoiY2l3MnhmNWs1MDFhczJ5bXcxZnBoYnpieCJ9.4FSqySqEd1cYPaxK5ltf1w';
+var map = new mapboxgl.Map({
+    container: 'map',
+    // // style: getTrafficStyle(),
+    // style: 'mapbox://styles/mapbox/navigation-preview-day-v2',
+    style: 'mapbox://styles/tututoto/cjz9ix6te00e11cpiok1zmgzl',
+    // style: 'mapbox://styles/mapbox/light-v10',
+    center: [116.270169, 40.087127],
+    zoom: 4
+});
+map.on('click', function(event){
+    let lng = event.lngLat.lng.toFixed(6)
+    let lat = event.lngLat.lat.toFixed(6)
+    let zoom = map.getZoom()
+    console.log('Clicked at : ' + lng + ', ' + lat + '. Zoom: ' + zoom)
+  // var style = map.getStyle();
+  //   console.info(JSON.stringify(style));
+});
+
+var geojson = {
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          120.1904296875,
+          30.391830328088137
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.44287109374999,
+          31.16580958786196
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          118.828125,
+          32.18491105051798
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          117.11975097656249,
+          31.812229022640704
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          116.45507812500001,
+          40.07807142745009
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          113.35693359375,
+          23.160563309048314
+        ]
+      }
+    }
+  ]
+};
+
+geojson.features.forEach(function(marker) {
+    var el = document.createElement('div');
+    el.className = 'marker';
+
+    var el1 = document.createElement('p');
+    el.appendChild(el1);
+    var el2 = document.createElement('span');
+    el1.appendChild(el2);
+
+    new mapboxgl.Marker(el)
+        .setLngLat(marker.geometry.coordinates)
+        .addTo(map);
+});
+</script>
+
+</body>
+</html>
