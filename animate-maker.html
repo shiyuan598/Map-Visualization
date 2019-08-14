@@ -4,8 +4,6 @@
     <meta charset='utf-8' />
     <title>Add custom icons with Markers</title>
     <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
-    <script src="style/MapStyle.js"></script>
-    <script src="style/dynamic-traffic-info.js"></script>
     <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.js'></script>
     <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.css' rel='stylesheet' />
     <style>
@@ -16,7 +14,6 @@
             padding: 0;
         }
         .marker {
-            /* background: url("./image/loc.png"); */
             background-position: center center;
             width:20px;
             height:20px;
@@ -49,7 +46,6 @@
 mapboxgl.accessToken = 'pk.eyJ1IjoidHV0dXRvdG8iLCJhIjoiY2l3MnhmNWs1MDFhczJ5bXcxZnBoYnpieCJ9.4FSqySqEd1cYPaxK5ltf1w';
 var map = new mapboxgl.Map({
     container: 'map',
-    // // style: getTrafficStyle(),
     // style: 'mapbox://styles/mapbox/navigation-preview-day-v2',
     style: 'mapbox://styles/tututoto/cjz9ix6te00e11cpiok1zmgzl', // 自己定义的样式，需要配合自己的key
     // style: 'mapbox://styles/mapbox/light-v10',
@@ -61,8 +57,6 @@ map.on('click', function(event){
     let lat = event.lngLat.lat.toFixed(6)
     let zoom = map.getZoom()
     console.log('Clicked at : ' + lng + ', ' + lat + '. Zoom: ' + zoom)
-  // var style = map.getStyle();
-  //   console.info(JSON.stringify(style));
 });
 
 var geojson = {
