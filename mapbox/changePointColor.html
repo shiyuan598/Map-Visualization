@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset='utf-8' />
+  <title>Display a map</title>
+  <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+  <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.js'></script>
+  <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.css' rel='stylesheet' />
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    #map {
+      height: 100vh;
+      width: 100vw;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id='map'></div>
+  <script>
+    mapboxgl.accessToken = 'your token here';
+    var map = new mapboxgl.Map({
+      container: 'map', // container id
+      style: 'mapbox://styles/mapbox/streets-v11', // stylesheet location
+      center: [116.45507, 40.07807], // starting position [lng, lat]
+      zoom: 4,// starting zoom
+      maxZoom: 15
+    });
+
+    var geojson = {
+      "type": "FeatureCollection",
+      "features": [
+        {
+          "type": "Feature",
+          "properties": {
+            "id": 1,
+            "name": "杭州"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              120.1904296875,
+              30.391830328088137
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "properties": {
+            "id": 2,
+            "name": "上海"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              121.44287109374999,
+              31.16580958786196
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "properties": {
+            "id": 3,
+            "name": "南京"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              118.828125,
+              32.18491105051798
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "properties": {
+            "id": 4,
+            "name": "合肥"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              117.11975097656249,
+              31.812229022640704
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "properties": {
+            "id": 5,
+            "name": "北京"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              116.45507812500001,
+              40.07807142745009
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "properties": {
+            "id": 6,
+            "name": "广州"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              113.35693359375,
+              23.160563309048314
+            ]
+          }
+        }
+      ]
+    };
+
+
+    var layerId = 'mutil-color-layer';
+    map.on('load', function () {
+      map.addLayer({
+        'id': layerId,
+        'type': 'circle',
+        'source': {
+          'type': 'geojson',
+          'data': geojson
+        },
+        'layout': {
+          'visibility': 'visible'
+        },
+        'paint': {
+          'circle-radius': 20,
+          'circle-color': ['case',
+            ['==', ['get', 'name'], '北京'], '#f40',
+            '#0094ff'
+          ],
+          'circle-opacity': 0.8
+        }
+      });
+    });
+
+    map.on('click', layerId, function (e) {
+      var name = e.features[0].properties.name;
+      var circleColorExpresion = ['case',
+        ['==', ['get', 'name'], name], '#f40',
+        '#0094ff'
+      ];
+      map.setPaintProperty(layerId, 'circle-color', circleColorExpresion);
+    });
+
+  </script>
+
+</body>
+
+</html>

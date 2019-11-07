@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8' />
+    <title>Add a 3D model</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v1.4.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v1.4.0/mapbox-gl.css' rel='stylesheet' />
+    <script src='https://unpkg.com/three@0.106.2/build/three.min.js'></script>
+    <script src="https://unpkg.com/three@0.106.2/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="./MTLLoader.js"></script>
+    <script src="./OBJLoader.js"></script>
+    <style>
+        body { margin:0; padding:0; }
+        #map { position:absolute; top:0; bottom:0; width:100%; }
+    </style>
+</head>
+<body>
+<div id='map'></div>
+<script>
+mapboxgl.accessToken = 'pk.eyJ1IjoidHV0dXRvdG8iLCJhIjoiY2sxYWI5YmxqMDUydzNqcGk3cnE4N2JtOCJ9.SNh8XuryEhcu3AP2WpI46g';
+var map = window.map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/streets-v11',
+    zoom: 18,
+    center: [148.9819, -35.3981],
+    pitch: 60,
+    antialias: true // create the gl context with MSAA antialiasing, so custom layers are antialiased
+});
+
+// parameters to ensure the model is georeferenced correctly on the map
+var modelOrigin = [148.98190, -35.39847];
+var modelAltitude = 0;
+var modelRotate = [0, 0, Math.PI / 2];
+
+var modelAsMercatorCoordinate = mapboxgl.MercatorCoordinate.fromLngLat(modelOrigin, modelAltitude);
+
+// transformation parameters to position, rotate and scale the 3D model onto the map
+var modelTransform = {
+    translateX: modelAsMercatorCoordinate.x,
+    translateY: modelAsMercatorCoordinate.y,
+    translateZ: modelAsMercatorCoordinate.z,
+    rotateX: modelRotate[0],
+    rotateY: modelRotate[1],
+    rotateZ: modelRotate[2],
+    /* Since our 3D model is in real world meters, a scale transform needs to be
+     * applied since the CustomLayerInterface expects units in MercatorCoordinates.
+     */
+    scale: modelAsMercatorCoordinate.meterInMercatorCoordinateUnits()
+};
+
+var THREE = window.THREE;
+
+// configuration of the custom layer for a 3D model per the CustomLayerInterface
+var customLayer = {
+    id: '3d-model',
+    type: 'custom',
+    renderingMode: '3d',
+    onAdd: function(map, gl) {
+        this.camera = new THREE.Camera();
+        this.scene = new THREE.Scene();
+
+        var light = new THREE.AmbientLight(0xffffff)
+        this.scene.add(light);
+
+        var directionalLight = new THREE.DirectionalLight(0xffffff);
+        directionalLight.position.set(0, 70, 100).normalize();
+        this.scene.add(directionalLight);
+
+        var that = this
+        var buildings = [
+            'amk_2225_station_building',
+            'amk_bldg_1351_sp_station_building',
+            'amk_bldg_1771_swim_building',
+            'amk_bldg_2221_church_building',
+            'amk_blk301_building',
+            'amk_blk302_building',
+            'amk_blk303_building',
+            'amk_blk304_building',
+            'amk_blk305_building',
+            'amk_blk305a_building',
+            'amk_blk306_building',
+            'amk_blk306a_building',
+            'amk_blk307a_building',
+            'amk_blk307b_building',
+            'amk_blk308a_building',
+            'amk_blk308b_building',
+            'amk_blk309a_building',
+            'amk_blk310a_building',
+            'amk_blk310b_building',
+            'amk_blk310c_building',
+            'amk_blk310d_building',
+            'amk_blk311_building',
+            'amk_blk312_building',
+            'amk_blk313_building',
+            'amk_blk314_building',
+            'amk_blk315_building',
+            'amk_blk315a_building',
+            'amk_blk315b_building',
+            'amk_blk316a_building',
+            'amk_blk316b_building',
+            'amk_blk317_building',
+            'amk_blk318_building',
+            'amk_blk319_building',
+            'amk_blk320_building',
+            'amk_blk321_building',
+            'amk_blk322_building',
+            'amk_mjd_almuttaqin_building',
+            'amk_jubileesq_building',
+            'amk_djitsun_building',
+            'amk_chengsan1406_building',
+            'amk_chengsan1405_building',
+            'amk_chengsan1404_building',
+            'amk_chengsan1403_building',
+            'amk_centro_building',
+            'amk_blk730_building',
+            'amk_blk729_building'
+        ]
+
+        buildings.forEach(item => {
+            var mtlLoader = new THREE.MTLLoader();
+            var rootDir = "./objModel/"
+            mtlLoader.setPath(rootDir)
+            var objLoader = new THREE.OBJLoader();
+
+            mtlLoader.load(item + '.mtl', function (materials) {
+                materials.preload();
+                objLoader.setMaterials(materials);
+                objLoader.load(rootDir + item + '.obj', function (object) {
+                    // object.position.x = Math.random() * 2;
+                    that.scene.add(object);
+                });
+            });
+        })
+
+        this.map = map;
+
+        // use the Mapbox GL JS map canvas for three.js
+        this.renderer = new THREE.WebGLRenderer({
+            canvas: map.getCanvas(),
+            context: gl,
+            antialias: true
+        });
+
+        this.renderer.autoClear = false;
+    },
+    render: function(gl, matrix) {
+        var rotationX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), modelTransform.rotateX);
+        var rotationY = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(0, 1, 0), modelTransform.rotateY);
+        var rotationZ = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(0, 0, 1), modelTransform.rotateZ);
+
+        var m = new THREE.Matrix4().fromArray(matrix);
+        var l = new THREE.Matrix4().makeTranslation(modelTransform.translateX, modelTransform.translateY, modelTransform.translateZ)
+            .scale(new THREE.Vector3(modelTransform.scale, -modelTransform.scale, modelTransform.scale))
+            .multiply(rotationX)
+            .multiply(rotationY)
+            .multiply(rotationZ);
+
+        this.camera.projectionMatrix.elements = matrix;
+        this.camera.projectionMatrix = m.multiply(l);
+        this.renderer.state.reset();
+        this.renderer.render(this.scene, this.camera);
+        this.map.triggerRepaint();
+    }
+};
+
+map.on('style.load', function() {
+    map.addLayer(customLayer);
+});
+</script>
+
+</body>
+</html>

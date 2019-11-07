@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <link rel="stylesheet" href="./minemap.css">
+  <script src="./minemap-3d-beta.js"></script>
+  <style>
+    *{
+    margin: 0;
+    padding: 0;
+    }
+    #map {
+      height: 800px;
+      width: 1200px;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+</body>
+<script>
+  // 以下可不设置，有默认值
+  minemap.domainUrl = '//minedata.cn';
+  minemap.spriteUrl = '//minedata.cn/minemapapi/v2.0.0/sprite/sprite';
+  minemap.serviceUrl = '//minedata.cn/service';
+  // 设置方案的accessToken和solution
+  minemap.accessToken = '25cc55a69ea7422182d00d6b7c0ffa93';
+  minemap.solution = 2365;
+
+  var map = new minemap.Map({
+      container: 'map', // 容器id
+      style: '//minedata.cn/service/solu/style/id/5571',// 地图样式
+      center: [116.43300661348444, 39.95004775210401], // 中心点
+      bearing: 45,
+      maxZoom: 22.5,
+      minZoom: 15.5,
+      zoom: 17, // 地图缩放级别
+      pitch: 60 // 地图倾斜角度
+  });
+  map.repaint = true; // 启动动画
+  map.on('load', function () {
+      manBackground(map);
+      addHDRoad(map);
+  });
+
+  function addHDRoad(map) {
+      //添加矢量vector切片数据源
+      map.addSource('source3d', {
+          type: 'vector',
+          tiles: ['//datahive.minedata.cn/test/roadpolygon/{z}/{x}/{y}']
+      });
+    // map.addLayer({
+    //   type: 'fill',
+    //   id: '3d_no_shihua',
+    //   source: 'source3d',
+    //   'source-layer': 'RoadPolygon',
+    //   paint: {
+    //     "render-3d": true,
+    //     // 'extrusion-color': '#0094ff', //道路颜色
+    //     // "render-road": true                 //是否渲染道路：true渲染，false不渲染道路
+    //     'fill-color': '#f40'
+    //   },
+    //   minzoom: 16 //根据pid属性选中特定道路
+    // });
+      //添加非湿滑道路的底图图层，id唯一标识，source数据源，source-layer数据源图层，paint绘制相关配置
+      map.addLayer({
+          type: 'extrusion',
+          id: '3d_no_shihua',
+          source: 'source3d',
+          'source-layer': 'RoadPolygon',
+          paint: {
+              // 'extrusion-color': 'rgb(58,62,71)', //道路颜色
+              'extrusion-color': '#f40', //道路颜色
+              "render-road": true                 //是否渲染道路：true渲染，false不渲染道路
+          },
+          minzoom: 16,
+          filter: ["all", ["!=", 'pid', 185310], ['!=', 'pid', 388950]]  //根据pid属性选中特定道路
+      });
+    //   添加湿滑道路底图图层
+      map.addLayer({
+          type: 'extrusion',
+          id: '3d_shihua',
+          source: 'source3d',
+          'source-layer': 'RoadPolygon',
+          paint: {
+              'extrusion-color': 'rgb(58,62,71)',
+              "render-road": true
+          },
+          minzoom: 16,
+          filter: ["any", ["==", 'pid', 185310], ['==', 'pid', 388950]]  //根据pid属性选中特定道路
+      });
+      //添加道路标线图层
+      var types = ['车道中心线_黄虚线',
+          '车行道分界线_白色虚线69线',
+          '停止线_30CM停止线',
+          '车行道分界线_白色实线',
+          '车行道边缘线_白色实线'];
+      var colors = ['yellow', '#80a7b9', '#80a7b9', '#80a7b9', '#80a7b9'];
+      var dashes = [
+          [10, 10],
+          [12, 18],
+          null,
+          null,
+          null
+      ];
+      map.addSource('lineSource', {
+          type: 'vector',
+          tiles: ['//datahive.minedata.cn/test/roadline/{z}/{x}/{y}']
+      });
+      for (var i = 0; i < types.length; i++) {
+          var layer = {
+              "id": "road_line_" + i,
+              "type": "line",
+              "source": "lineSource",
+              "source-layer": "RoadLine",
+              "layout": {
+                  "line-join": "round",  //线相交处的样式：连接处为以线宽一半为半径的圆角
+                  "line-cap": "round",   //线末端的样式：默认圆角
+                  "visibility": "visible" //是否可视:“visible”表示显示该图层，“none”表示隐藏该图层
+              },
+              "paint": {
+                  "render-3d": true,     //道路标线是否3d渲染:true具有高度的渲染，false不带高度的渲染
+                  "line-opacity": 1,     //道路标线透明度
+                  "line-color": colors[i],    //颜色
+                  "line-width": {stops: [[10, 0.8], [17, 1]], base: 1.2}, //线宽
+                  "line-dasharray": dashes[i] //虚线设置: [12,18]表示有线段长度12，无线段部分长度18，交替设置
+              },
+              'minzoom': 16,  //最小缩放等级
+              filter: ['==', 'type', types[i]] //过滤条件
+          };
+          if (!dashes[i]) {
+              delete  layer.paint['line-dasharray'];
+          }
+          map.addLayer(layer);
+      }
+  }
+
+  function manBackground(map) {
+      //设置星空背景随着鼠标交互地图旋转而变化
+      var mapDiv = document.getElementById('map');
+      map.on('move', function (e) {
+          var pitch = map.getPitch();
+          var bearing = map.getBearing();
+          if (pitch <= 60) {
+              return;
+          }
+          mapDiv.style.backgroundPositionX = -bearing / 180 * 1920 + 'px';
+      })
+  }
+</script>
+</html>

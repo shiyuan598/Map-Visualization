@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>自定义图层-WebGL</title>
+    <link rel="stylesheet" href="/api/static/demo/js-api/zh/css/demo.css">
+    <!-- 引入MineMap API插件 -->
+    <link rel="stylesheet" href="//minedata.cn/minemapapi/v2.0.0/minemap.css">
+    <script src="//minedata.cn/minemapapi/v2.0.0/minemap.js"></script>
+    <style>
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+    /**
+     * 全局参数设置
+     */
+    minemap.domainUrl = '//minedata.cn';
+	minemap.dataDomainUrl = '//datahive.minedata.cn';
+	minemap.spriteUrl = '//minedata.cn/minemapapi/v2.0.0/sprite/sprite';
+	minemap.serviceUrl = '//minedata.cn/service/';
+
+    minemap.accessToken = '25cc55a69ea7422182d00d6b7c0ffa93';
+    minemap.solution = 2365;
+
+    var map = new minemap.Map({
+        container: 'map',
+        style: '//minedata.cn/service/solu/style/id/2365',
+        center: [116.391050, 51.074588],
+        zoom: 3,
+        bearing: 100,
+        pitch: 60,
+        maxZoom: 17,
+        minZoom: 3
+    });
+
+    // 定义自定义图层类
+    class CustomLayer {
+        constructor() {
+            this.id = 'customlayer';
+            this.type = 'custom';
+            this.renderingMode = '3d';
+        }
+
+        onAdd(map, gl) {
+            /* 顶点片元着色器 */
+            var vertexShaderSource =
+                "attribute vec3 aPos;\n" +
+                "uniform mat4 uMatrix;\n" +
+                "void main() {\n" +
+                "gl_Position = uMatrix * vec4(aPos, 1.0);\n" +
+                "}";
+
+            var fragmentShaderSource =
+                "void main() {\n" +
+                "gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);\n" +
+                "}";
+
+            var vertexShader = gl.createShader(gl.VERTEX_SHADER);
+            gl.shaderSource(vertexShader, vertexShaderSource);
+            gl.compileShader(vertexShader);
+            var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+            gl.shaderSource(fragmentShader, fragmentShaderSource);
+            gl.compileShader(fragmentShader);
+
+            /* 创建并配置program */
+            this.program = gl.createProgram();
+            gl.attachShader(this.program, vertexShader);
+            gl.attachShader(this.program, fragmentShader);
+            gl.linkProgram(this.program);
+            gl.validateProgram(this.program);
+
+            this.program.aPos = gl.getAttribLocation(this.program, "aPos");
+            this.program.uMatrix = gl.getUniformLocation(this.program, "uMatrix");
+
+            /* 创建顶点和顶点索引的缓冲区数据 */
+            var x = 0.8;
+            var y = 0.3;
+            var z = 0.025;
+            var d = 0.025;
+
+            var vertexArray = new Float32Array([
+                x, y, 0,
+                x + d, y, 0,
+                x, y + d, z,
+                x + d, y + d, z,
+                x, y + d + d, 0,
+                x + d, y + d + d, 0]);
+            var indexArray = new Uint16Array([
+                0, 1, 2,
+                1, 2, 3,
+                2, 3, 4,
+                3, 4, 5
+            ]);
+
+            this.vertexBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, vertexArray, gl.STATIC_DRAW);
+            this.indexBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indexArray, gl.STATIC_DRAW);
+        }
+
+        render(gl, matrix) {
+            /* 绑定缓冲区，绘制自定义图层 */
+            gl.useProgram(this.program);
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
+            gl.enableVertexAttribArray(this.program.a_pos);
+            gl.vertexAttribPointer(this.program.aPos, 3, gl.FLOAT, false, 0, 0);
+            gl.uniformMatrix4fv(this.program.uMatrix, false, matrix);
+            gl.drawElements(gl.TRIANGLES, 12, gl.UNSIGNED_SHORT, 0);
+        }
+    }
+
+    /**
+     * 创建地图对象后，开始加载地图资源，地图资源加载完成后触发load事件
+     */
+    map.on('load', function () {
+        //  添加自定义图层
+        map.addLayer(new CustomLayer());
+    });
+
+</script>
+</body>
