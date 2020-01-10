@@ -96,9 +96,5 @@ export default function (map, name) {
         get: () => actualPixelRatio
       })
     })
-
-    // setTimeout(() => {
-    //
-    // }, 2000)
   })
 }

@@ -47,7 +47,7 @@ export default {
     that.fetchFunction(url, function (data) {
       let options = {
         path: data.routes[0].geometry.coordinates,
-        duration: 3000
+        duration: 10000
       }
 
       that.threebox.remove(that.line)

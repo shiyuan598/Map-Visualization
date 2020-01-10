@@ -8,6 +8,8 @@
 import mapboxgl from 'mapbox-gl'
 import exportMap from '@/components/export-map/Export'
 import vehicleLayer from './vehicleLayer'
+import axios from 'axios'
+import '@/mock/mock'
 
 export default {
   name: 'Map',
@@ -21,8 +23,26 @@ export default {
   },
   mounted () {
     this.initMap()
+    this.mockTest()
   },
   methods: {
+    mockTest () {
+      axios.get('/api/login')
+        .then(res => {
+          console.log(res.data)
+        })
+        .catch(err => {
+          console.log(err)
+        })
+
+      axios.get('/api/user')
+        .then(res => {
+          console.log(res.data)
+        })
+        .catch(err => {
+          console.log(err)
+        })
+    },
     initMap () {
       let that = this
       let config = that.$baseConfig
@@ -47,6 +67,10 @@ export default {
         console.log('lngLat: ' + lng + ', ' + lat + '. Zoom: ' + zoom.toFixed(3))
         // vehicle travel
         vehicleLayer.travelPath([lng, lat], config.accessToken)
+
+        axios.get('/api/data', function (res) {
+          console.info(res)
+        })
       })
       map.on('style.load', function () {
         vehicleLayer.addVehicle(map, center)

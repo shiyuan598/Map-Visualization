@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import Map from '@/components/minemap/Map'
+import Map from '@/components/mapbox/Map'
 
 Vue.use(Router)
 
